@@ -1,79 +1,169 @@
-local Core=game:GetService("CoreGui")
+-- optional
+getgenv().ExecutionCount = (getgenv().ExecutionCount or 0) + 1
+getgenv().FanIsDone = getgenv().FanIsDone or false
 
-local gui=Instance.new("ScreenGui",Core)
-gui.Name="fanplayer99999"
+local brownText = "#A67A30"
+local whiteText = "#FFFFFF"
 
--- so compiler doesnt go huh
-local queue={}
-local current=0
-local playing=false
+local function SendCustomChat(msg, isSystem)
+	local user = "Fan"
 
--- sound
-local sound=Instance.new("Sound",Core)
-sound.Volume=1
+	local TextChatService = game:GetService("TextChatService")
 
--- style.css
-local bg=Color3.fromRGB(18,18,18)
-local panel=Color3.fromRGB(28,28,28)
-local orange=Color3.fromRGB(255, 157, 0)
-local text=Color3.fromRGB(255,255,255)
-local sub=Color3.fromRGB(160,160,160)
-local font=Enum.Font.Gotham
+	if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+		local channel = TextChatService:FindFirstChild("RBXGeneral", true)
+		if channel then
 
--- stroage
-local folder="a"
-if not isfolder(folder)then makefolder(folder)end
+			local finalMsg
 
-local function download(n,u)
-    local p=folder.."/"..n
-    if isfile(p)then return getcustomasset(p)end
+			if isSystem then
+				finalMsg = msg
+			else
+				finalMsg =
+					"<font color='#A67A30'>"..user..":</font> "..
+					"<font color='#FFFFFF'>"..msg.."</font>"
+			end
 
-    local r=syn and syn.request or http and http.request or request or http_request
-    local d
+			channel:DisplaySystemMessage(finalMsg)
+		end
+	end
 
-    if r then
-        local s,x=pcall(function()return r({Url=u,Method="GET"})end)
-        if s and x and x.StatusCode==200 then d=x.Body end
-    end
-
-    if not d then
-        local s,x=pcall(function()return game:HttpGet(u)end)
-        if s then d=x end
-    end
-
-    writefile(p,d)
-    return getcustomasset(p)
+	pcall(function()
+		game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+			Text = isSystem and msg or (user .. ": " .. msg),
+			Color = Color3.fromRGB(255,255,255),
+			Font = Enum.Font.SourceSansBold
+		})
+	end)
 end
 
--- bg
-local main=Instance.new("Frame",gui)
-main.Size=UDim2.new(0,420,0,300)
-main.Position=UDim2.new(0.3,0,0.25,0)
-main.BackgroundColor3=bg
-main.Active=true
-main.Draggable=true
-Instance.new("UICorner",main).CornerRadius=UDim.new(0,0.5)
+local count = getgenv().ExecutionCount
 
--- title
-local title=Instance.new("TextLabel",main)
-title.Size=UDim2.new(1,0,0,32)
-title.BackgroundTransparency=1
-title.Text="Fan Player"
-title.Font=font
-title.TextSize=18
-title.TextColor3=text
+if count == 2 then
+	SendCustomChat("It could cause bugs if you execute it twice!")
+elseif count == 3 then
+	SendCustomChat("Stop it, Are you really doing this.")
+elseif count == 4 then
+	SendCustomChat("Seriously? You keep doing that, I’m gonna permaban you from the script.")
+elseif count == 5 then
+	SendCustomChat("I was kidding but seriously, stop it.")
+elseif count == 6 then
+	SendCustomChat("Are you really this impatient?")
+elseif count == 7 then
+	SendCustomChat("Dude.")
+	getgenv().FanIsDone = true
+	task.wait(0.5)
+	SendCustomChat("Fan has left the game.", true)
+elseif count >= 8 then
+	return
+end
 
--- playin
-local now=Instance.new("TextLabel",main)
-now.Position=UDim2.new(0,10,0,35)
-now.Size=UDim2.new(1,-20,0,22)
-now.BackgroundTransparency=1
-now.Font=font
-now.TextSize=14
-now.TextColor3=sub
-now.Text="No song selected"
+-- prevent duplicate run in same environment session
+if getgenv().ScriptExecuted then
+	return
+end
+getgenv().ScriptExecuted = true
 
--- the puts
+-- okay heres where it starts
+
+local Core = game:GetService("CoreGui")
+
+local gui = Instance.new("ScreenGui", Core)
+gui.Name = "fanplayer99999"
+
+-- peak name, right?
+
+local queue = {}
+local current = 0
+local playing = false
+
+local sound = Instance.new("Sound", Core)
+sound.Volume = 1
+
+local bg = Color3.fromRGB(18,18,18)
+local panel = Color3.fromRGB(28,28,28)
+local orange = Color3.fromRGB(255,157,0)
+local text = Color3.fromRGB(255,255,255)
+local sub = Color3.fromRGB(160,160,160)
+local font = Enum.Font.Gotham
+
+-- folder!!!!
+local folder = "Songs (Fan Player)"
+if not isfolder(folder) then makefolder(folder) end
+
+-- clean it out
+local function cleanSongName(path)
+	path = path:gsub("\\","/")
+	path = path:match("Songs %(Fan Player%)/(.+)") or path
+	path = path:gsub("%.mp3$","")
+	return path
+end
+
+-- download it yoh
+local function getAudio(n,u)
+	local p = folder.."/"..n
+	if isfile(p) then return getcustomasset(p) end
+
+	local r = syn and syn.request or http and http.request or request or http_request
+	local d
+
+	if r then
+		local s,x = pcall(function()
+			return r({Url=u,Method="GET"})
+		end)
+		if s and x and x.StatusCode == 200 then d = x.Body end
+	end
+
+	if not d then
+		local s,x = pcall(function()
+			return game:HttpGet(u)
+		end)
+		if s and typeof(x) == "string" then d = x end
+	end
+
+	if not d or typeof(d) ~= "string" then return nil end
+
+	writefile(p,d)
+	return getcustomasset(p)
+end
+
+-- the style.css of luau
+-- glisten loves this part of luau 🪞🏳️‍🌈
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0,420,0,320)
+main.Position = UDim2.new(0.5,0,0.5,0)
+main.AnchorPoint = Vector2.new(0.5,0.5)
+main.BackgroundColor3 = bg
+main.Active = true
+main.Draggable = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,0.5) -- eww i dont like the default outline 🤮
+
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,32)
+title.BackgroundTransparency = 1
+title.Text = "Fan Player"
+title.Font = font
+title.TextSize = 18
+title.TextColor3 = text
+
+local now = Instance.new("TextLabel", main)
+now.Position = UDim2.new(0,10,0,35)
+now.Size = UDim2.new(1,-20,0,22)
+now.BackgroundTransparency = 1
+now.Font = font
+now.TextSize = 14
+now.TextColor3 = sub
+now.Text = "No song selected"
+
+-- limiter
+local function limit(box,max)
+	box:GetPropertyChangedSignal("Text"):Connect(function()
+		if #box.Text>max then
+			box.Text=box.Text:sub(1,max)
+		end
+	end)
+end
+
 local nameBox=Instance.new("TextBox",main)
 nameBox.Position=UDim2.new(0,10,0,65)
 nameBox.Size=UDim2.new(0.48,0,0,30)
@@ -82,9 +172,10 @@ nameBox.TextColor3=text
 nameBox.Font=font
 nameBox.TextSize=14
 nameBox.ClearTextOnFocus=false
-nameBox.Text="" -- pretty important
+nameBox.Text="" -- empty here lol
 nameBox.PlaceholderText="Song Name"
 Instance.new("UICorner",nameBox).CornerRadius=UDim.new(0,0.5)
+limit(nameBox,25)
 
 local urlBox=Instance.new("TextBox",main)
 urlBox.Position=UDim2.new(0.52,0,0,65)
@@ -94,70 +185,62 @@ urlBox.TextColor3=text
 urlBox.Font=font
 urlBox.TextSize=14
 urlBox.ClearTextOnFocus=false
-urlBox.Text="" -- empty here lol
+urlBox.Text="" -- also here, pretty important
 urlBox.PlaceholderText="Raw MP3 URL"
 Instance.new("UICorner",urlBox).CornerRadius=UDim.new(0,0.5)
+limit(urlBox,60)
 
--- buttons
-local function btn(t,x,y,color)
-    local b=Instance.new("TextButton",main)
-    b.Size=UDim2.new(0,95,0,28)
-    b.Position=UDim2.new(0,x,0,y)
-    b.Text=t
-    b.Font=font
-    b.TextSize=14
-    b.TextColor3=text
-    b.BackgroundColor3=color or panel
-    Instance.new("UICorner",b).CornerRadius=UDim.new(0,6)
-    return b
+-- button stuff
+local function btn(t)
+	local b=Instance.new("TextButton")
+	b.Text=t
+	b.Font=font
+	b.TextSize=14
+	b.TextColor3=text
+	b.BackgroundColor3=panel
+	local w=math.clamp(#t*8+25,80,200)
+	b.Size=UDim2.new(0,w,0,28)
+	Instance.new("UICorner",b).CornerRadius=UDim.new(0,0.5)
+	return b
 end
 
-local playBtn=btn("Play",10,110)
-local prevBtn=btn("Prev",110,110)
-local nextBtn=btn("Next",210,110)
-local shuffleBtn=btn("Shuffle",310,110)
-local addBtn=btn("Add to Queue",10,145,orange)
-local copyBtn = btn("Copy Tutorial", 110, 145, panel)
+local function row(y,...)
+	local x=10
+	local gap=12
+	for _,b in ipairs({...}) do
+		b.Parent=main
+		b.Position=UDim2.new(0,x,0,y)
+		x=x+b.Size.X.Offset+gap
+	end
+end
 
-local busy = false
+-- buttons!!
+local playBtn=btn("Play")
+local prevBtn=btn("Prev")
+local nextBtn=btn("Next")
+local shuffleBtn=btn("Shuffle")
 
-copyBtn.MouseButton1Click:Connect(function()
-    if busy then return end
-    busy = true
+local addBtn=btn("Add to Queue")
+addBtn.BackgroundColor3=orange
 
-    local link = "https://blushcrunch-studio.github.io/docs.fanplayer/"
+local copyBtn=btn("Copy Tutorial URL")
+local loadBtn=btn("Load Songs")
 
-    -- ayooo thats me
+row(110, playBtn, prevBtn, nextBtn, shuffleBtn)
+row(145, addBtn, copyBtn, loadBtn)
 
-    if setclipboard then
-        setclipboard(link)
-    elseif toclipboard then
-        toclipboard(link)
-    elseif clipboard then
-        clipboard(link)
-    end
-
-    copyBtn.Text = "Copied!"
-    task.wait(1)
-    copyBtn.Text = "Copy Tutorial"
-
-    busy = false
-end)
+-- list!!
 
 local list=Instance.new("ScrollingFrame",main)
-list.Position=UDim2.new(0,10,0,185)
+list.Position=UDim2.new(0,10,0,200)
 list.Size=UDim2.new(1,-20,0,105)
 list.BackgroundColor3=panel
 list.ScrollBarThickness=5
 list.BorderSizePixel=0
-list.ScrollingDirection=Enum.ScrollingDirection.Y
-list.AutomaticCanvasSize=Enum.AutomaticSize.Y
-
+list.CanvasSize=UDim2.new(0,0,0,0)
 Instance.new("UICorner",list).CornerRadius=UDim.new(0,0.5)
 
 local layout=Instance.new("UIListLayout",list)
-layout.SortOrder=Enum.SortOrder.LayoutOrder
-layout.Padding=UDim.new(0,4)
 
 local empty=Instance.new("TextLabel",list)
 empty.Size=UDim2.new(1,0,1,0)
@@ -167,143 +250,148 @@ empty.TextColor3=sub
 empty.Font=font
 empty.TextSize=14
 
--- fresh
+-- refresh
 local function refresh()
-    for _,v in ipairs(list:GetChildren()) do
-        if v:IsA("TextLabel") and v~=empty then
-            v:Destroy()
-        end
-    end
+	for _,v in ipairs(list:GetChildren()) do
+		if v:IsA("TextLabel") and v~=empty then
+			v:Destroy()
+		end
+	end
+	if #queue==0 then
+		empty.Visible=true
+		return
+	end
+	empty.Visible=false
+	for i,v in ipairs(queue) do
+		local t=Instance.new("TextLabel",list)
+		t.Size=UDim2.new(1,-10,0,24)
+		t.Font=font
+		t.TextSize=14
+		t.TextXAlignment=Enum.TextXAlignment.Left
 
-    if #queue==0 then
-        empty.Visible=true
-        list.CanvasSize=UDim2.new(0,0,0,0)
-        return
-    end
-
-    empty.Visible=false
-
-    for i,v in ipairs(queue) do
-        local t=Instance.new("TextLabel",list)
-        t.Size=UDim2.new(1,-10,0,24)
-        t.BackgroundTransparency=1
-        t.Font=font
-        t.TextSize=14
-        t.TextColor3=sub
-        t.TextXAlignment=Enum.TextXAlignment.Left
-        t.Text=i..". "..v.name
-    end
-
-    task.wait()
-    list.CanvasSize=UDim2.new(0,0,0,layout.AbsoluteContentSize.Y)
+if playing and i==current then
+	t.Text=" ▶ "..i..". "..v.name -- aw man i wanted emojis
+else
+	t.Text=i..". "..v.name
 end
 
--- AUDIO LOAD
-local function getAudio(n,u)
-    local p=folder.."/"..n
-    if isfile(p)then return getcustomasset(p)end
-
-    local r=syn and syn.request or http and http.request or request or http_request
-    local d
-
-    if r then
-        local s,x=pcall(function()return r({Url=u,Method="GET"})end)
-        if s and x and x.StatusCode==200 then d=x.Body end
-    end
-
-    if not d then
-        local s,x=pcall(function()return game:HttpGet(u)end)
-        if s then d=x end
-    end
-
-    writefile(p,d)
-    return getcustomasset(p)
+		-- default state
+		t.BackgroundTransparency=1
+		t.TextColor3=sub
+		-- ONLY highlight if currently playing
+		if playing and i==current then
+			t.BackgroundTransparency=0
+			t.BackgroundColor3=Color3.fromRGB(60,60,60)
+			t.TextColor3=text
+		end
+	end
 end
 
--- play it, john!
+-- play
 local function playSong(i)
-    local sng=queue[i]
-    if not sng then return end
-
-    current=i
-    sound.SoundId=getAudio(sng.name..".mp3",sng.url)
-    sound:Play()
-
-    playing=true
-    playBtn.Text="Pause"
-    now.Text="Now Playing: "..sng.name
+	local sng=queue[i]
+	if not sng then return end
+	current=i
+	local asset=getAudio(sng.name..".mp3",sng.url)
+	if not asset then return end
+	sound:Stop()
+	sound.SoundId=asset
+	sound.TimePosition=0
+	sound:Play()
+	playing=true
+	playBtn.Text="Pause"
+	now.Text="Now Playing: "..sng.name
+	refresh()
 end
 
--- play it better, johnson!
+-- controls
 playBtn.MouseButton1Click:Connect(function()
-    if current==0 then return end
-
-    if playing then
-        sound:Pause()
-        playing=false
-        playBtn.Text="Play"
-    else
-        sound:Play()
-        playing=true
-        playBtn.Text="Pause"
-    end
+	if current==0 then return end
+	local sng=queue[current]
+	if not sng then return end
+	if playing then
+		sound:Pause()
+		playing=false
+		playBtn.Text="Play"
+		now.Text="Paused: "..sng.name
+	else
+		sound:Resume()
+		playing=true
+		playBtn.Text="Pause"
+		now.Text="Now Playing: "..sng.name
+	end
+	refresh()
 end)
 
--- ctrontorl
 nextBtn.MouseButton1Click:Connect(function()
-    if #queue==0 then return end
-    current=current%#queue+1
-    playSong(current)
+	if #queue==0 then return end
+	current=current%#queue+1
+	playSong(current)
 end)
 
 prevBtn.MouseButton1Click:Connect(function()
-    if #queue==0 then return end
-    current=(current-2)%#queue+1
-    playSong(current)
+	if #queue==0 then return end
+	current=(current-2)%#queue+1
+	playSong(current)
 end)
 
 shuffleBtn.MouseButton1Click:Connect(function()
-    if #queue==0 then return end
-    playSong(math.random(1,#queue))
+	if #queue==0 then return end
+	playSong(math.random(1,#queue))
 end)
 
--- add
+-- add songs
 addBtn.MouseButton1Click:Connect(function()
-    if nameBox.Text=="" or urlBox.Text=="" then return end
+	if nameBox.Text=="" or urlBox.Text=="" then return end
+	table.insert(queue,{
+		name=nameBox.Text,
+		url=urlBox.Text
+	})
+	if #queue==1 then
+		current=1
+		now.Text="Now Playing: "..nameBox.Text
+	end
+	nameBox.Text=""
+	urlBox.Text=""
+	refresh()
+task.wait()
+list.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y)
+end)
 
-    for _,v in ipairs(queue) do
-        if v.name==nameBox.Text then return end
-    end
+-- copy button
+copyBtn.MouseButton1Click:Connect(function()
+	local link="https://blushcrunch-studio.github.io/docs.fanplayer/"
+	if setclipboard then
+		setclipboard(link)
+	elseif toclipboard then
+		toclipboard(link)
+	elseif clipboard then
+		clipboard(link)
+	end
+	copyBtn.Text="Copied!"
+	task.wait(1)
+	copyBtn.Text="Copy Tutorial URL"
+end)
 
-    table.insert(queue,{
-        name=nameBox.Text,
-        url=urlBox.Text
-    })
-
-    nameBox.Text=""
-    urlBox.Text=""
-
-    refresh()
+-- load
+loadBtn.MouseButton1Click:Connect(function()
+	queue={}
+	for _,file in ipairs(listfiles(folder)) do
+		local clean=cleanSongName(file)
+		table.insert(queue,{
+			name=clean,
+			url="file://"..file
+		})
+	end
+	current=0
+	playing=false
+	sound:Stop()
+	now.Text="Loaded "..#queue.." songs, now press Next to play!"
+	refresh()
 end)
 
 sound.Ended:Connect(function()
-    if #queue == 0 or current == 0 then return end
-
-    local finished = table.remove(queue, current)
-    table.insert(queue, finished)
-
-    if current > #queue then
-        current = 1
-    end
-
-    refresh()
-
-    if #queue > 0 then
-        playSong(current)
-    else
-        current = 0
-        playing = false
-        playBtn.Text = "Play"
-        now.Text = "No song selected"
-    end
-end)
+	if #queue==0 or current==0 then return end
+	current=current%#queue+1
+	playSong(current)
+end) -- okay its done
