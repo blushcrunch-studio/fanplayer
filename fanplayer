@@ -286,22 +286,24 @@ addBtn.MouseButton1Click:Connect(function()
     refresh()
 end)
 
--- one play and its gone lol
 sound.Ended:Connect(function()
-    if #queue>0 and current>0 then
-        table.remove(queue,current)
+    if #queue == 0 or current == 0 then return end
 
-        if current>#queue then current=1 end
+    local finished = table.remove(queue, current)
+    table.insert(queue, finished)
 
-        refresh()
+    if current > #queue then
+        current = 1
+    end
 
-        if #queue>0 then
-            playSong(current)
-        else
-            current=0
-            playing=false
-            playBtn.Text="Play"
-            now.Text="No song selected"
-        end
+    refresh()
+
+    if #queue > 0 then
+        playSong(current)
+    else
+        current = 0
+        playing = false
+        playBtn.Text = "Play"
+        now.Text = "No song selected"
     end
 end)
