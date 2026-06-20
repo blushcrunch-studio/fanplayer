@@ -52,7 +52,7 @@ main.Position=UDim2.new(0.3,0,0.25,0)
 main.BackgroundColor3=bg
 main.Active=true
 main.Draggable=true
-Instance.new("UICorner",main).CornerRadius=UDim.new(0,10)
+Instance.new("UICorner",main).CornerRadius=UDim.new(0,0.5)
 
 -- title
 local title=Instance.new("TextLabel",main)
@@ -84,7 +84,7 @@ nameBox.TextSize=14
 nameBox.ClearTextOnFocus=false
 nameBox.Text="" -- pretty important
 nameBox.PlaceholderText="Song Name"
-Instance.new("UICorner",nameBox).CornerRadius=UDim.new(0,6)
+Instance.new("UICorner",nameBox).CornerRadius=UDim.new(0,0.5)
 
 local urlBox=Instance.new("TextBox",main)
 urlBox.Position=UDim2.new(0.52,0,0,65)
@@ -96,7 +96,7 @@ urlBox.TextSize=14
 urlBox.ClearTextOnFocus=false
 urlBox.Text="" -- empty here lol
 urlBox.PlaceholderText="Raw MP3 URL"
-Instance.new("UICorner",urlBox).CornerRadius=UDim.new(0,6)
+Instance.new("UICorner",urlBox).CornerRadius=UDim.new(0,0.5)
 
 -- buttons
 local function btn(t,x,y,color)
@@ -117,7 +117,7 @@ local prevBtn=btn("Prev",110,110)
 local nextBtn=btn("Next",210,110)
 local shuffleBtn=btn("Shuffle",310,110)
 local addBtn=btn("Add to Queue",10,145,orange)
-local copyBtn = btn("Copy Tutorial URL", 110, 145, panel)
+local copyBtn = btn("Copy Tutorial", 110, 145, panel)
 
 local busy = false
 
@@ -153,7 +153,7 @@ list.BorderSizePixel=0
 list.ScrollingDirection=Enum.ScrollingDirection.Y
 list.AutomaticCanvasSize=Enum.AutomaticSize.Y
 
-Instance.new("UICorner",list).CornerRadius=UDim.new(0,10)
+Instance.new("UICorner",list).CornerRadius=UDim.new(0,0.5)
 
 local layout=Instance.new("UIListLayout",list)
 layout.SortOrder=Enum.SortOrder.LayoutOrder
