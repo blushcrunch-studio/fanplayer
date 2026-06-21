@@ -100,7 +100,7 @@ local function cleanSongName(path)
 end
 
 -- download it yoh
--- i have absolutely no idea how this works
+-- i have absolutely no idea how this http stuff works
 -- do NOT touch it
 -- seriously
 -- last time I changed this the audio system exploded into beans
