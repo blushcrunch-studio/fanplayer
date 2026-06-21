@@ -50,7 +50,7 @@ elseif count == 5 then
 elseif count == 6 then
 	SendCustomChat("Are you really this impatient?")
 elseif count == 7 then
-	SendCustomChat("Dude.")
+	SendCustomChat("Dude. I'm extremely dissapointed in you.")
 	getgenv().FanIsDone = true
 	task.wait(0.5)
 	SendCustomChat("Fan has left the game.", true)
