@@ -100,6 +100,10 @@ local function cleanSongName(path)
 end
 
 -- download it yoh
+-- i have absolutely no idea how this works
+-- do NOT touch it
+-- seriously
+-- last time I changed this the audio system exploded into beans
 local function getAudio(n,u)
 	local p = folder.."/"..n
 	if isfile(p) then return getcustomasset(p) end
